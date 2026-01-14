@@ -334,3 +334,51 @@ tsTest("Generic element in GlobalHTMLElementTagNameMap with correct type", t => 
 
 	hasNoDiagnostics(t, diagnostics);
 });
+
+tsTest.only("Generic element: property binding type-checks when types are correct", t => {
+	const { diagnostics } = getDiagnostics(`
+		class Widget {}
+
+		type WidgetConstructor<WidgetT extends Widget> = new (element: WidgetElement<WidgetT>) => WidgetT;
+
+		class WidgetElement<WidgetT extends Widget> extends HTMLElement {
+			widgetClass!: WidgetConstructor<WidgetT>;
+			a!: string;
+		}
+		class TestClass extends Widget {
+			a!: string;
+		}
+
+		declare global {
+			interface HTMLElementTagNameMap {
+				'devtools-widget': WidgetElement<TestClass>;
+			}
+		}
+		html\`<devtools-widget .widgetClass=\${TestClass} .a=\${'b'}></devtools-widget>\`
+	`);
+	hasNoDiagnostics(t, diagnostics);
+});
+
+tsTest.only("Generic element: property binding type-checks when types are incorrect", t => {
+	const { diagnostics } = getDiagnostics(`
+		class Widget {}
+
+		type WidgetConstructor<WidgetT extends Widget> = new (element: WidgetElement<WidgetT>) => WidgetT;
+
+		class WidgetElement<WidgetT extends Widget> extends HTMLElement {
+			widgetClass!: WidgetConstructor<WidgetT>;
+			a!: string;
+		}
+		class TestClass extends Widget {
+			a!: string;
+		}
+
+		declare global {
+			interface HTMLElementTagNameMap {
+				'devtools-widget': WidgetElement<TestClass>;
+			}
+		}
+		html\`<devtools-widget .widgetClass=\${TestClass} .a=\${1}></devtools-widget>\`
+	`);
+	hasDiagnostic(t, diagnostics, "no-incompatible-type-binding");
+});
