@@ -293,3 +293,44 @@ tsTest("Attribute binding: the target attribute is correctly type checked when g
 
 	hasNoDiagnostics(t, diagnostics);
 });
+
+tsTest("Generic element in GlobalHTMLElementTagNameMap", t => {
+	const { diagnostics } = getDiagnostics(`
+        import { LitElement, html, property, customElement } from 'lit-element';
+
+        export class GenericElement<T> extends LitElement {
+            @property() key!: keyof T
+        }
+
+        declare global {
+            interface HTMLElementTagNameMap {
+                'generic-specific': GenericElement<{ id: number, name: string }>
+            }
+        }
+
+        html\`<generic-specific key='what??'></generic-specific>\`
+    `);
+
+	// We expect a diagnostic because 'what??' is not assignable to 'id' | 'name'
+	hasDiagnostic(t, diagnostics, "no-incompatible-type-binding");
+});
+
+tsTest("Generic element in GlobalHTMLElementTagNameMap with correct type", t => {
+	const { diagnostics } = getDiagnostics(`
+        import { LitElement, html, property, customElement } from 'lit-element';
+
+        export class GenericElement<T> extends LitElement {
+            @property() key!: keyof T
+        }
+
+        declare global {
+            interface HTMLElementTagNameMap {
+                'generic-specific': GenericElement<{ id: number, name: string }>
+            }
+        }
+
+        html\`<generic-specific key='id'></generic-specific>\`
+    `);
+
+	hasNoDiagnostics(t, diagnostics);
+});

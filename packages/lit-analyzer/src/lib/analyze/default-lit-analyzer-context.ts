@@ -21,6 +21,7 @@ import { DefaultAnalyzerDocumentStore } from "./store/document-store/default-ana
 import { DefaultAnalyzerHtmlStore } from "./store/html-store/default-analyzer-html-store.js";
 import { HtmlDataSourceKind } from "./store/html-store/html-data-source-merged.js";
 import { changedSourceFileIterator } from "./util/changed-source-file-iterator.js";
+import { refineHtmlCollectionWithTagNameMap } from "./util/refine-html-collection.js";
 
 export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 	protected componentSourceFileIterator = changedSourceFileIterator();
@@ -266,6 +267,10 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 			checker: this.checker,
 			addDeclarationPropertiesAsAttributes: this.program.isSourceFileFromExternalLibrary(sourceFile)
 		});
+
+		// Refine types using HTMLElementTagNameMap specific to the source file context
+		refineHtmlCollectionWithTagNameMap(htmlCollection, this.checker, sourceFile);
+
 		this.htmlStore.absorbCollection(htmlCollection, reg);
 	}
 
