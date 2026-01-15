@@ -12,9 +12,5 @@ export function isAssignableToType(
 		options: context.ts,
 		...(options || {})
 	};
-	try {
-		return _isAssignableToType(typeA, typeB, context.program, expandedOptions);
-	} catch (e) {
-		return true;
-	}
+	return _isAssignableToType(typeA, typeB, context.program, expandedOptions);
 }

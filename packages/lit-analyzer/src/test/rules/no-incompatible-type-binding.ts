@@ -299,7 +299,7 @@ tsTest("Generic element in GlobalHTMLElementTagNameMap", t => {
         import { LitElement, html, property, customElement } from 'lit-element';
 
         export class GenericElement<T> extends LitElement {
-            @property() key!: keyof T
+            @property() key: keyof T
         }
 
         declare global {
@@ -320,7 +320,7 @@ tsTest("Generic element in GlobalHTMLElementTagNameMap with correct type", t => 
         import { LitElement, html, property, customElement } from 'lit-element';
 
         export class GenericElement<T> extends LitElement {
-            @property() key!: keyof T
+            @property() key: keyof T
         }
 
         declare global {
@@ -335,50 +335,46 @@ tsTest("Generic element in GlobalHTMLElementTagNameMap with correct type", t => 
 	hasNoDiagnostics(t, diagnostics);
 });
 
-tsTest.only("Generic element: property binding type-checks when types are correct", t => {
+tsTest("Generic element: property binding type-checks when types are correct", t => {
 	const { diagnostics } = getDiagnostics(`
 		class Widget {}
 
 		type WidgetConstructor<WidgetT extends Widget> = new (element: WidgetElement<WidgetT>) => WidgetT;
 
 		class WidgetElement<WidgetT extends Widget> extends HTMLElement {
-			widgetClass!: WidgetConstructor<WidgetT>;
-			a!: string;
+			widgetClass: WidgetConstructor<WidgetT>;
+			params: WidgetT;
 		}
 		class TestClass extends Widget {
-			a!: string;
+			a: string;
 		}
 
-		declare global {
-			interface HTMLElementTagNameMap {
-				'devtools-widget': WidgetElement<TestClass>;
-			}
+		interface HTMLElementTagNameMap {
+			'custom-widget': WidgetElement<TestClass>;
 		}
-		html\`<devtools-widget .widgetClass=\${TestClass} .a=\${'b'}></devtools-widget>\`
+		html\`<custom-widget .widgetClass=\${TestClass} .params=\${{a: 'b'}}></custom-widget>\`
 	`);
 	hasNoDiagnostics(t, diagnostics);
 });
 
-tsTest.only("Generic element: property binding type-checks when types are incorrect", t => {
+tsTest("Generic element: property binding type-checks when types are incorrect", t => {
 	const { diagnostics } = getDiagnostics(`
 		class Widget {}
 
 		type WidgetConstructor<WidgetT extends Widget> = new (element: WidgetElement<WidgetT>) => WidgetT;
 
 		class WidgetElement<WidgetT extends Widget> extends HTMLElement {
-			widgetClass!: WidgetConstructor<WidgetT>;
-			a!: string;
+			widgetClass: WidgetConstructor<WidgetT>;
+			params: WidgetT;
 		}
 		class TestClass extends Widget {
-			a!: string;
+			a: string;
 		}
 
-		declare global {
-			interface HTMLElementTagNameMap {
-				'devtools-widget': WidgetElement<TestClass>;
-			}
+		interface HTMLElementTagNameMap {
+			'custom-widget': WidgetElement<TestClass>;
 		}
-		html\`<devtools-widget .widgetClass=\${TestClass} .a=\${1}></devtools-widget>\`
+		html\`<custom-widget .widgetClass=\${TestClass} .params=\${{a: 1}}></custom-widget>\`
 	`);
 	hasDiagnostic(t, diagnostics, "no-incompatible-type-binding");
 });
